@@ -1,0 +1,60 @@
+---
+title: "writing_functions.Rmd"
+author: "Ruilian Zhang"
+date: "11/4/2021"
+output: github_document
+---
+
+```{r}
+library(tidyverse)
+library(rvest)
+```
+
+
+## Z scores
+
+```{r}
+x_vec = rnorm(25, mean = 5, sd = 4)
+
+(x_vec - mean(x_vec)) / sd(x_vec)
+
+z_scores = function(x) {
+  
+  z = (x - mean(x)) / sd(x)
+  
+  return(z)
+  
+}
+
+z_scores(x = x_vec)
+
+y_vec = rnorm(40, 12, .3)
+
+z_scores(y_vec)
+```
+
+
+```{r, error = TRUE}
+z_scores = function(x) {
+  
+  if(!is.numeric(x)) {
+    stop("x needs to be numeric")
+  }
+  
+  if(length(x) < 3) {
+    stop("x should have at least 3 numbers")
+  }
+  
+  z = (x - mean(x)) / sd(x)
+  
+  return(z)
+  
+}
+
+z_scores(3)
+
+z_scores("Roxy")
+
+z_scores(y_vec)
+```
+
