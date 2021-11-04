@@ -61,11 +61,11 @@ z_scores(y_vec)
 ```{r}
 mean_and_sd = function(x) {
   
-  if(!is.numeric(x)) {
+  if (!is.numeric(x)) {
     stop("x needs to be numeric")
   }
   
-  if(length(x) < 3) {
+  if (length(x) < 3) {
     stop("x should have at least 3 numbers")
   }
   
@@ -81,6 +81,44 @@ mean_and_sd = function(x) {
   return(output_df)
 }
 
+mean_and_sd(x_vec)
 mean_and_sd(y_vec)
+```
+
+
+## Different sample siezs, means, sds
+
+```{r}
+sim_data = 
+  tibble(
+    x = rnorm(30, mean = 2, sd = 3)
+  )
+
+sim_data %>% 
+  summarize(
+    mean = mean(x),
+    sd = sd(x)
+  )
+```
+
+Let's write function that simulates data, compute mean and sd.
+
+```{r}
+sim_mean_sd = function(n, mu, sigma) {
+  
+    sim_data = 
+    tibble(
+      x = rnorm(n, mean = mu, sd = sigma)
+    )
+  
+  sim_data %>% 
+    summarize(
+      mean = mean(x),
+      sd = sd(x)
+    )
+  
+}
+
+sim_mean_sd(30, 4, 3)
 ```
 
