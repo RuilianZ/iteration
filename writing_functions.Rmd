@@ -58,3 +58,29 @@ z_scores("Roxy")
 z_scores(y_vec)
 ```
 
+```{r}
+mean_and_sd = function(x) {
+  
+  if(!is.numeric(x)) {
+    stop("x needs to be numeric")
+  }
+  
+  if(length(x) < 3) {
+    stop("x should have at least 3 numbers")
+  }
+  
+  mean_x = mean(x)
+  sd_x = sd(x)
+  
+  output_df = 
+    tibble(
+      mean = mean_x,
+      sd = sd_x
+    )
+  
+  return(output_df)
+}
+
+mean_and_sd(y_vec)
+```
+
