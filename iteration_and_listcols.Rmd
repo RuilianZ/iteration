@@ -1,0 +1,234 @@
+---
+title: "iteration_and_listcols"
+author: "Ruilian Zhang"
+date: "11/9/2021"
+output: github_document
+---
+
+```{r}
+library(tidyverse)
+library(rvest)
+
+set.seed(1)
+```
+
+
+## Lists
+
+```{r}
+l = 
+  list(
+    vec_numeric = 5:8,
+    vec_logical = c(TRUE, FALSE),
+    summary = summary(rnorm(1000, mean = 5, sd = 3))
+  )
+
+l[[3]]
+
+l[["summary"]]
+
+l$summary
+
+l[3]
+```
+
+
+## Define funciton
+
+```{r}
+mean_and_sd = function(x) {
+  
+  if (!is.numeric(x)) {
+    stop("x needs to be numeric")
+  }
+  
+  if (length(x) < 3) {
+    stop("x should have at least 3 numbers")
+  }
+  
+  mean_x = mean(x)
+  sd_x = sd(x)
+  
+  output_df = 
+    tibble(
+      mean = mean_x,
+      sd = sd_x
+    )
+  
+  return(output_df)
+}
+```
+
+
+## List of normals
+
+```{r}
+list_norms = 
+  list(
+    a = rnorm(50, 2, 1),
+    b = rnorm(50, 5, 3),
+    c = rnorm(50, 20, 1.2),
+    d = rnorm(50, -12, 0.5)
+  )
+
+mean_and_sd(list_norms[[3]])
+```
+
+
+## Let's write for loop
+
+```{r}
+output = vector("list", length = 4)
+
+# output[[1]] = mean_and_sd(list_norms[[1]])
+
+for (i in 1:4) {
+  output[[i]] = mean_and_sd(list_norms[[i]])
+}
+```
+
+Let's use map instead ...
+
+```{r}
+output = map(list_norms, mean_and_sd)
+
+output = map(list_norms, median)
+
+output = map(list_norms, IQR)
+
+output = map(list_norms, summary)
+
+# return just numbers
+output = map_dbl(list_norms, median)
+```
+
+
+## List columns
+
+```{r}
+listcol_df = 
+  tibble(
+    name = c("a", "b", "c", "d"),
+    norms = list_norms
+  )
+
+listcol_df %>% 
+  filter(name == "a")
+
+listcol_df %>%  pull(name)
+listcol_df %>%  pull(norms)
+
+listcol_df$norms[[1]]
+
+mean_and_sd(listcol_df$norms[[1]])
+
+listcol_df %>% 
+  mutate(summaries = map(listcol_df$norms, mean_and_sd)) %>% 
+  pull(summaries)
+```
+
+
+
+## Nested data
+
+```{r}
+weather_df = 
+  rnoaa::meteo_pull_monitors(
+    c("USW00094728", "USC00519397", "USS0023B17S"),
+    var = c("PRCP", "TMIN", "TMAX"), 
+    date_min = "2017-01-01",
+    date_max = "2017-12-31") %>%
+  mutate(
+    name = recode(
+      id, 
+      USW00094728 = "CentralPark_NY", 
+      USC00519397 = "Waikiki_HA",
+      USS0023B17S = "Waterhole_WA"),
+    tmin = tmin / 10,
+    tmax = tmax / 10) %>%
+  select(name, id, everything())
+```
+
+
+Nest data within location
+
+```{r}
+weather_nested = nest(weather_df, data = date:tmin)
+
+weather_nested %>% 
+  pull(data)
+
+lm(tmax ~ tmin, data = weather_nested$data[[1]])
+
+
+weather_lm = function(df) {
+  
+  lm(tmax ~ tmin, data = df)
+  
+}
+
+weather_lm(weather_nested$data[[1]])
+
+
+map(weather_nested$data, weather_lm)
+
+weather_nested %>% 
+  mutate(lm_results = map(data, weather_lm))
+
+unnest(weather_nested, data)
+```
+
+
+
+## Napoleon
+
+Function to get reviews/stars
+
+```{r}
+get_page_reviews <- function(url) {
+  
+  html = read_html(url)
+  
+  review_titles = 
+    html %>%
+    html_nodes(".a-text-bold span") %>%
+    html_text()
+  
+  review_stars = 
+    html %>%
+    html_nodes("#cm_cr-review_list .review-rating") %>%
+    html_text() %>%
+    str_extract("^\\d") %>%
+    as.numeric()
+  
+  review_text = 
+    html %>%
+    html_nodes(".review-text-content span") %>%
+    html_text() %>% 
+    str_replace_all("\n", "") %>% 
+    str_trim()
+  
+  tibble(
+    title = review_titles,
+    stars = review_stars,
+    text = review_text
+  )
+}
+
+base_url = "https://www.amazon.com/product-reviews/B00005JNBQ/ref=cm_cr_arp_d_viewopt_rvwer?ie=UTF8&reviewerType=avp_only_reviews&sortBy=recent&pageNumber="
+
+urls = str_c(base_url, 1:5)
+
+map(urls, get_page_reviews)
+
+napoleon_df = 
+  tibble(
+    urls = urls
+    )
+
+napoleon_df %>% 
+  mutate(reviews = map(urls, get_page_reviews)) %>% 
+  select(reviews) %>% 
+  unnest()
+```
+
