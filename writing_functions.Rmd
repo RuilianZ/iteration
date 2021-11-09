@@ -155,7 +155,7 @@ reviews = tibble(
 
 Okay but there are a lot pages if reviews...
 
-Write a fuction that gets review based in page url
+Write a function that gets review based in page url
 
 ```{r}
 get_page_reviews <- function(url) {
