@@ -7,7 +7,79 @@ output: github_document
 
 ```{r}
 library(tidyverse)
+library(rvest)
 
 set.seed(1)
 ```
+
+
+## Let's simulate something
+
+I have a function.
+ 
+```{r}
+sim_mean_sd = function(sample_size, mu = 3, sigma = 4) {
+  
+    sim_data = 
+    tibble(
+      x = rnorm(n = sample_size, mean = mu, sd = sigma)
+    )
+  
+  sim_data %>% 
+    summarize(
+      mean = mean(x),
+      sd = sd(x)
+    )
+  
+}
+```
+
+I can "simulate" by running this line.
+
+```{r}
+sim_mean_sd(30)
+```
+
+
+## Lets' simulate a lot
+
+Let's start with a for loop.
+
+```{r}
+output = vector("list", length = 100)
+
+for (i in 1:100) {
+  
+  output[[i]] = sim_mean_sd(sample_size = 30)
+}
+
+bind_rows(output)
+```
+
+Let's use a loop function.
+
+```{r}
+sim_results = 
+  rerun(100, sim_mean_sd(sample_size = 30)) %>% 
+  bind_rows()
+```
+
+Let's look at results.
+
+```{r}
+sim_results %>% 
+  ggplot(aes(x = mean)) + geom_density()
+
+4/sqrt(30) # sample sd
+
+sim_results %>% 
+  summarize(
+    average_sample_mean = mean(mean),
+    sd_sample_mean = sd(mean)
+  )
+
+sim_results %>% 
+  ggplot(aes(x = sd)) + geom_density()
+```
+
 
