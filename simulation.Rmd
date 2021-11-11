@@ -1,0 +1,13 @@
+---
+title: "Simulation"
+author: "Ruilian Zhang"
+date: "11/11/2021"
+output: github_document
+---
+
+```{r}
+library(tidyverse)
+
+set.seed(1)
+```
+
