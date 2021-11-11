@@ -137,3 +137,99 @@ sim_results %>%
 ```
 
 ![](simulation_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
+
+## Let’s try other sampe sizes
+
+``` r
+n_list = 
+  list(
+    "n = 30" = 30,
+    "n = 60" = 60,
+    "n = 120" = 120,
+    "n = 240" = 240
+  )
+
+output = vector("list", length = 4)
+
+output[[1]] = rerun(100, sim_mean_sd(sample_size = n_list[[1]])) %>% bind_rows()
+output[[2]] = rerun(100, sim_mean_sd(sample_size = n_list[[2]])) %>% bind_rows()
+
+for (i in 1:4) {
+  
+  output[[i]] = 
+    rerun(100, sim_mean_sd(sample_size = n_list[[i]])) %>%
+    bind_rows()
+  
+}
+```
+
+``` r
+# cache = T
+# run once and save the result untill change this code chunk
+# downside: easy to break
+sim_results = 
+  tibble(
+    sample_size = c(30, 60, 120, 240)
+  ) %>% 
+    mutate(
+      output_lists = map(.x = sample_size, ~ rerun(1000, sim_mean_sd(.x))),
+      estimate_df = map(output_lists, bind_rows)
+    ) %>% 
+    select(-output_lists) %>% 
+    unnest(estimate_df)
+```
+
+Do some dataframe things.
+
+``` r
+sim_results %>%
+  mutate(
+    sample_size = str_c("n = ", sample_size),
+    sample_size = fct_inorder(sample_size)
+  ) %>% 
+  ggplot(aes(x = sample_size, y = mean)) +
+  geom_violin()
+```
+
+![](simulation_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+``` r
+sim_results %>% 
+  group_by(sample_size) %>% 
+  summarize(
+    avg_samp_mean = mean(mean),
+    sd_samp_mean = sd(mean)
+  )
+```
+
+    ## # A tibble: 4 × 3
+    ##   sample_size avg_samp_mean sd_samp_mean
+    ##         <dbl>         <dbl>        <dbl>
+    ## 1          30          3.00        0.703
+    ## 2          60          3.02        0.523
+    ## 3         120          3.00        0.377
+    ## 4         240          3.00        0.261
+
+``` r
+4 / sqrt(30)
+```
+
+    ## [1] 0.7302967
+
+``` r
+4 / sqrt(60)
+```
+
+    ## [1] 0.5163978
+
+``` r
+4 / sqrt(120)
+```
+
+    ## [1] 0.3651484
+
+``` r
+4 / sqrt(240)
+```
+
+    ## [1] 0.2581989
